@@ -259,6 +259,7 @@ public class Dashboard extends javax.swing.JFrame {
 
         taEventLog.setColumns(20);
         taEventLog.setRows(5);
+        taEventLog.setFocusable(false);
         jScrollPane3.setViewportView(taEventLog);
 
         jLabel6.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
