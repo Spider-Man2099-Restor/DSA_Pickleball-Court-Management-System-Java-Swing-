@@ -718,7 +718,8 @@ public class Dashboard extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void addCourtBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addCourtBtnActionPerformed
-        // TODO add your handling code here:
+        addCourtFrame form = new addCourtFrame(this);
+        form.setVisible(true);
     }//GEN-LAST:event_addCourtBtnActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
