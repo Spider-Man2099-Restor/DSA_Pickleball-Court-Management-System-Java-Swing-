@@ -3,9 +3,11 @@ package com.courtflow.view;
 import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.themes.FlatMacLightLaf;
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Insets;
 import javax.swing.BorderFactory;
 import javax.swing.UIManager;
+import javax.swing.table.JTableHeader;
 
 public class Dashboard extends javax.swing.JFrame {
 
@@ -13,10 +15,10 @@ public class Dashboard extends javax.swing.JFrame {
 
     public Dashboard() {
         initComponents();
-        
+
         this.getContentPane().setBackground(Color.WHITE);
         MainPanel.setBackground(Color.WHITE);
-         
+
         LeftPanel.putClientProperty(FlatClientProperties.STYLE,
                 "arc: 20; background: #FFFFFF; border: 1,1,1,1, #E2E8F0, 1, 20");
         MiddlePanel.putClientProperty(FlatClientProperties.STYLE,
@@ -25,7 +27,9 @@ public class Dashboard extends javax.swing.JFrame {
                 "arc: 20; background: #FFFFFF; border: 1,1,1,1, #E2E8F0, 1, 20");
         HeaderPanel.putClientProperty(FlatClientProperties.STYLE,
                 "arc: 20; background: #FFFFFF; border: 1,1,1,1, #E2E8F0, 1, 20");
-        
+        eventLogPanel.putClientProperty(FlatClientProperties.STYLE,
+                "arc: 20; background: #FFFFFF; border: 1,1,1,1, #E2E8F0, 1, 20");
+
 // 2. Remove the sharp square border from the JScrollPane
         jScrollPane1.setBorder(BorderFactory.createEmptyBorder());
         jScrollPane2.setBorder(BorderFactory.createEmptyBorder());
@@ -34,6 +38,9 @@ public class Dashboard extends javax.swing.JFrame {
         jScrollPane2.getViewport().setBackground(Color.WHITE);
         jScrollPane3.getViewport().setBackground(Color.WHITE);
         
+//        JTableHeader header = courtTable.getTableHeader();
+//        header.setFont(header.getFont().deriveFont(Font.BOLD));
+
     }
 
     @SuppressWarnings("unchecked")
@@ -45,7 +52,6 @@ public class Dashboard extends javax.swing.JFrame {
         LeftPanel = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         addCourtBtn = new javax.swing.JButton();
-        courtCounter = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
         courtTable = new javax.swing.JTable();
         deleteCourtBtn = new javax.swing.JButton();
@@ -55,14 +61,15 @@ public class Dashboard extends javax.swing.JFrame {
         jScrollPane2 = new javax.swing.JScrollPane();
         waitingQueueTable = new javax.swing.JTable();
         RightPanel = new javax.swing.JPanel();
+        eventLogPanel = new javax.swing.JPanel();
+        jScrollPane3 = new javax.swing.JScrollPane();
+        jTextArea1 = new javax.swing.JTextArea();
         jLabel3 = new javax.swing.JLabel();
         jLabel4 = new javax.swing.JLabel();
         tfPlayerId = new javax.swing.JTextField();
         jLabel5 = new javax.swing.JLabel();
         tfPlayerName = new javax.swing.JTextField();
         addPlayerBtn = new javax.swing.JButton();
-        jScrollPane3 = new javax.swing.JScrollPane();
-        taEventLog = new javax.swing.JTextArea();
         jLabel6 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -91,12 +98,10 @@ public class Dashboard extends javax.swing.JFrame {
         jLabel1.setText("COURTS");
 
         addCourtBtn.setBackground(new java.awt.Color(37, 99, 235));
-        addCourtBtn.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        addCourtBtn.setFont(new java.awt.Font("Segoe UI", 1, 11)); // NOI18N
         addCourtBtn.setForeground(new java.awt.Color(255, 255, 255));
         addCourtBtn.setText("Add Court");
         addCourtBtn.addActionListener(this::addCourtBtnActionPerformed);
-
-        courtCounter.setText("0 Courts");
 
         courtTable.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -134,10 +139,11 @@ public class Dashboard extends javax.swing.JFrame {
         });
         courtTable.setFocusable(false);
         courtTable.setShowGrid(true);
+        courtTable.setShowVerticalLines(false);
         jScrollPane1.setViewportView(courtTable);
 
         deleteCourtBtn.setBackground(new java.awt.Color(225, 29, 72));
-        deleteCourtBtn.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        deleteCourtBtn.setFont(new java.awt.Font("Segoe UI", 1, 11)); // NOI18N
         deleteCourtBtn.setForeground(new java.awt.Color(255, 255, 255));
         deleteCourtBtn.setText("Delete");
 
@@ -151,12 +157,10 @@ public class Dashboard extends javax.swing.JFrame {
                     .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 292, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGroup(LeftPanelLayout.createSequentialGroup()
                         .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 67, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(49, 49, 49)
+                        .addComponent(deleteCourtBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 72, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(courtCounter)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(deleteCourtBtn)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(addCourtBtn)))
+                        .addComponent(addCourtBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 91, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap(18, Short.MAX_VALUE))
         );
         LeftPanelLayout.setVerticalGroup(
@@ -166,9 +170,8 @@ public class Dashboard extends javax.swing.JFrame {
                 .addGroup(LeftPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(addCourtBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(courtCounter)
                     .addComponent(deleteCourtBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 16, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 396, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
@@ -179,7 +182,7 @@ public class Dashboard extends javax.swing.JFrame {
         jLabel2.setText("WAITING QUEUE");
 
         jButton2.setBackground(new java.awt.Color(225, 29, 72));
-        jButton2.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        jButton2.setFont(new java.awt.Font("Segoe UI", 1, 11)); // NOI18N
         jButton2.setForeground(new java.awt.Color(255, 255, 255));
         jButton2.setText("Leave");
         jButton2.addActionListener(this::jButton2ActionPerformed);
@@ -213,6 +216,7 @@ public class Dashboard extends javax.swing.JFrame {
         ));
         waitingQueueTable.setFocusable(false);
         waitingQueueTable.setShowGrid(true);
+        waitingQueueTable.setShowVerticalLines(false);
         jScrollPane2.setViewportView(waitingQueueTable);
 
         javax.swing.GroupLayout MiddlePanelLayout = new javax.swing.GroupLayout(MiddlePanel);
@@ -245,6 +249,28 @@ public class Dashboard extends javax.swing.JFrame {
 
         RightPanel.setBackground(new java.awt.Color(255, 255, 255));
 
+        eventLogPanel.setBackground(new java.awt.Color(255, 255, 255));
+
+        jTextArea1.setColumns(20);
+        jTextArea1.setRows(5);
+        jScrollPane3.setViewportView(jTextArea1);
+
+        javax.swing.GroupLayout eventLogPanelLayout = new javax.swing.GroupLayout(eventLogPanel);
+        eventLogPanel.setLayout(eventLogPanelLayout);
+        eventLogPanelLayout.setHorizontalGroup(
+            eventLogPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, eventLogPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jScrollPane3)
+                .addContainerGap())
+        );
+        eventLogPanelLayout.setVerticalGroup(
+            eventLogPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(eventLogPanelLayout.createSequentialGroup()
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 214, Short.MAX_VALUE)
+                .addContainerGap())
+        );
+
         jLabel3.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         jLabel3.setText("ADD PLAYER");
 
@@ -252,15 +278,12 @@ public class Dashboard extends javax.swing.JFrame {
 
         jLabel5.setText("Player Name");
 
+        tfPlayerName.addActionListener(this::tfPlayerNameActionPerformed);
+
         addPlayerBtn.setBackground(new java.awt.Color(22, 163, 74));
         addPlayerBtn.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         addPlayerBtn.setForeground(new java.awt.Color(255, 255, 255));
         addPlayerBtn.setText("+ Add Player");
-
-        taEventLog.setColumns(20);
-        taEventLog.setRows(5);
-        taEventLog.setFocusable(false);
-        jScrollPane3.setViewportView(taEventLog);
 
         jLabel6.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         jLabel6.setText("EVENT LOG");
@@ -270,18 +293,17 @@ public class Dashboard extends javax.swing.JFrame {
         RightPanelLayout.setHorizontalGroup(
             RightPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(RightPanelLayout.createSequentialGroup()
-                .addGap(22, 22, 22)
-                .addGroup(RightPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(RightPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                        .addComponent(jLabel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jLabel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(tfPlayerId)
-                        .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 77, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(tfPlayerName)
-                        .addComponent(addPlayerBtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 247, Short.MAX_VALUE))
-                    .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 83, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(22, Short.MAX_VALUE))
+                .addGap(16, 16, 16)
+                .addGroup(RightPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(jLabel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jLabel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(tfPlayerId)
+                    .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 77, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(tfPlayerName)
+                    .addComponent(addPlayerBtn, javax.swing.GroupLayout.DEFAULT_SIZE, 259, Short.MAX_VALUE)
+                    .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 83, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(eventLogPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(16, Short.MAX_VALUE))
         );
         RightPanelLayout.setVerticalGroup(
             RightPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -291,18 +313,18 @@ public class Dashboard extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jLabel4)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(tfPlayerId, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(tfPlayerId, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jLabel5)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(tfPlayerName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(tfPlayerName, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(addPlayerBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 12, Short.MAX_VALUE)
                 .addComponent(jLabel6)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 235, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap())
+                .addComponent(eventLogPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(15, 15, 15))
         );
 
         javax.swing.GroupLayout MainPanelLayout = new javax.swing.GroupLayout(MainPanel);
@@ -334,9 +356,9 @@ public class Dashboard extends javax.swing.JFrame {
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
+                .addGap(14, 14, 14)
                 .addComponent(MainPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addContainerGap())
+                .addGap(14, 14, 14))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -358,10 +380,14 @@ public class Dashboard extends javax.swing.JFrame {
         // TODO add your handling code here:
     }//GEN-LAST:event_jButton2ActionPerformed
 
+    private void tfPlayerNameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tfPlayerNameActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_tfPlayerNameActionPerformed
+
     public static void main(String args[]) {
         FlatMacLightLaf.setup();
         //UIManager.put("Panel.background", Color.WHITE);
-        
+
         UIManager.put("Button.arc", 15);
         UIManager.put("Component.arc", 15);
         UIManager.put("TextComponent.arc", 15);
@@ -369,8 +395,6 @@ public class Dashboard extends javax.swing.JFrame {
         UIManager.put("TableHeader.background", new Color(235, 241, 248));
         UIManager.put("TableHeader.foreground", new Color(30, 41, 59));
         UIManager.put("TableHeader.bottomSeparatorColor", new Color(203, 213, 225));
-        
-        
 
         //UIManager.put("TableHeader.height", 35);
         java.awt.EventQueue.invokeLater(() -> new Dashboard().setVisible(true));
@@ -384,9 +408,9 @@ public class Dashboard extends javax.swing.JFrame {
     private javax.swing.JPanel RightPanel;
     private javax.swing.JButton addCourtBtn;
     private javax.swing.JButton addPlayerBtn;
-    private javax.swing.JLabel courtCounter;
     private javax.swing.JTable courtTable;
     private javax.swing.JButton deleteCourtBtn;
+    private javax.swing.JPanel eventLogPanel;
     private javax.swing.JButton jButton2;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
@@ -397,7 +421,7 @@ public class Dashboard extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
-    private javax.swing.JTextArea taEventLog;
+    private javax.swing.JTextArea jTextArea1;
     private javax.swing.JTextField tfPlayerId;
     private javax.swing.JTextField tfPlayerName;
     private javax.swing.JTable waitingQueueTable;
