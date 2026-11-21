@@ -8,8 +8,11 @@ import java.awt.EventQueue;
 import javax.swing.UIManager;
 
 public class Main {
-    
-    public static void main(String[] args) {
+
+    public static void main(String[] args) throws Exception {
+        
+        FileUtil.createStartupFile("Courts.txt");
+        FileUtil.createStartupFile("Players.txt");
         
         FlatMacLightLaf.setup();
         UIManager.put("Button.arc", 15);
@@ -19,12 +22,10 @@ public class Main {
         UIManager.put("TableHeader.background", new Color(235, 241, 248));
         UIManager.put("TableHeader.foreground", new Color(30, 41, 59));
         UIManager.put("TableHeader.bottomSeparatorColor", new Color(203, 213, 225));
-        
-        FileUtil.createStartupFile("Products.txt");
-        
+
         EventQueue.invokeLater(() -> {
             new Dashboard().setVisible(true);
         });
     }
-    
+
 }

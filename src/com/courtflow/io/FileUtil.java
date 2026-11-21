@@ -13,7 +13,14 @@ public class FileUtil {
 
     //CreateFile
     public static void createStartupFile(String fileName) {
-        File file = new File(fileName);
+        try {
+            File file = new File(fileName);
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -44,5 +51,5 @@ public class FileUtil {
                 java.nio.file.StandardOpenOption.CREATE,
                 java.nio.file.StandardOpenOption.TRUNCATE_EXISTING
         );
-    } 
+    }
 }
