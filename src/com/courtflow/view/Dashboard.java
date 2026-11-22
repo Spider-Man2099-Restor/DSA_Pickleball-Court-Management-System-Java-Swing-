@@ -115,6 +115,7 @@ public class Dashboard extends javax.swing.JFrame {
         jLabel11 = new javax.swing.JLabel();
         startMatchBtn = new javax.swing.JButton();
         jLabel22 = new javax.swing.JLabel();
+        finishGameBtn = new javax.swing.JButton();
         LeftPanel = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         addCourtBtn = new javax.swing.JButton();
@@ -382,12 +383,15 @@ public class Dashboard extends javax.swing.JFrame {
         jLabel11.setText("QUICK MATCH");
 
         startMatchBtn.setBackground(new java.awt.Color(37, 99, 235));
-        startMatchBtn.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         startMatchBtn.setForeground(new java.awt.Color(255, 255, 255));
         startMatchBtn.setText("Start Match");
+        startMatchBtn.addActionListener(this::startMatchBtnActionPerformed);
 
         jLabel22.setForeground(new java.awt.Color(153, 153, 153));
         jLabel22.setText("Ready Up, Quick Play");
+
+        finishGameBtn.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/courtflow/images/stop.png"))); // NOI18N
+        finishGameBtn.addActionListener(this::finishGameBtnActionPerformed);
 
         javax.swing.GroupLayout jPanel5Layout = new javax.swing.GroupLayout(jPanel5);
         jPanel5.setLayout(jPanel5Layout);
@@ -400,12 +404,14 @@ public class Dashboard extends javax.swing.JFrame {
                         .addComponent(jLabel11, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                     .addGroup(jPanel5Layout.createSequentialGroup()
                         .addContainerGap()
-                        .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                             .addGroup(jPanel5Layout.createSequentialGroup()
-                                .addGap(6, 6, 6)
                                 .addComponent(jLabel22, javax.swing.GroupLayout.PREFERRED_SIZE, 132, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(0, 6, Short.MAX_VALUE))
-                            .addComponent(startMatchBtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                                .addGap(0, 20, Short.MAX_VALUE))
+                            .addGroup(jPanel5Layout.createSequentialGroup()
+                                .addComponent(startMatchBtn)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(finishGameBtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))))
                 .addContainerGap())
         );
         jPanel5Layout.setVerticalGroup(
@@ -414,7 +420,9 @@ public class Dashboard extends javax.swing.JFrame {
                 .addContainerGap()
                 .addComponent(jLabel11)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(startMatchBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(startMatchBtn, javax.swing.GroupLayout.DEFAULT_SIZE, 35, Short.MAX_VALUE)
+                    .addComponent(finishGameBtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jLabel22)
                 .addContainerGap(7, Short.MAX_VALUE))
@@ -460,7 +468,7 @@ public class Dashboard extends javax.swing.JFrame {
         jLabel1.setText("COURTS");
 
         addCourtBtn.setBackground(new java.awt.Color(37, 99, 235));
-        addCourtBtn.setFont(new java.awt.Font("Segoe UI", 1, 11)); // NOI18N
+        addCourtBtn.setFont(new java.awt.Font("Segoe UI", 0, 11)); // NOI18N
         addCourtBtn.setForeground(new java.awt.Color(255, 255, 255));
         addCourtBtn.setText("Add Court");
         addCourtBtn.addActionListener(this::addCourtBtnActionPerformed);
@@ -487,7 +495,7 @@ public class Dashboard extends javax.swing.JFrame {
         jScrollPane1.setViewportView(courtTable);
 
         deleteCourtBtn.setBackground(new java.awt.Color(225, 29, 72));
-        deleteCourtBtn.setFont(new java.awt.Font("Segoe UI", 1, 11)); // NOI18N
+        deleteCourtBtn.setFont(new java.awt.Font("Segoe UI", 0, 11)); // NOI18N
         deleteCourtBtn.setForeground(new java.awt.Color(255, 255, 255));
         deleteCourtBtn.setText("Delete");
         deleteCourtBtn.addActionListener(this::deleteCourtBtnActionPerformed);
@@ -527,7 +535,7 @@ public class Dashboard extends javax.swing.JFrame {
         jLabel2.setText("WAITING QUEUE");
 
         leavePlayerBtn.setBackground(new java.awt.Color(225, 29, 72));
-        leavePlayerBtn.setFont(new java.awt.Font("Segoe UI", 1, 11)); // NOI18N
+        leavePlayerBtn.setFont(new java.awt.Font("Segoe UI", 0, 11)); // NOI18N
         leavePlayerBtn.setForeground(new java.awt.Color(255, 255, 255));
         leavePlayerBtn.setText("Leave");
         leavePlayerBtn.addActionListener(this::leavePlayerBtnActionPerformed);
@@ -610,7 +618,6 @@ public class Dashboard extends javax.swing.JFrame {
         tfPlayerName.addActionListener(this::tfPlayerNameActionPerformed);
 
         addPlayerBtn.setBackground(new java.awt.Color(22, 163, 74));
-        addPlayerBtn.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         addPlayerBtn.setForeground(new java.awt.Color(255, 255, 255));
         addPlayerBtn.setText("+ Add Player");
         addPlayerBtn.addActionListener(this::addPlayerBtnActionPerformed);
@@ -917,6 +924,81 @@ public class Dashboard extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_addPlayerBtnActionPerformed
 
+    private void startMatchBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startMatchBtnActionPerformed
+
+        int selectedRow = courtTable.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Please select a court from the table first.",
+                    "No Court Selected",
+                    JOptionPane.WARNING_MESSAGE
+            );
+            return;
+        }
+        Court selectedCourt = courtList.get(selectedRow);
+
+        if (courtList.get(selectedRow).isCourtStatus().equalsIgnoreCase("In Match")) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "The selected court is currently in a match. Please choose an available court.",
+                    "Court Occupied",
+                    JOptionPane.WARNING_MESSAGE
+            );
+            return;
+        }
+
+        int confirm = JOptionPane.showConfirmDialog(
+                this,
+                "Are you sure you want to start at '" + selectedCourt.getCourtNumber() + "'?",
+                "Confirm Delete",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE
+        );
+
+        if (confirm != JOptionPane.YES_OPTION) {
+            return; // User clicked No or closed the dialog
+        }
+    }//GEN-LAST:event_startMatchBtnActionPerformed
+
+    private void finishGameBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_finishGameBtnActionPerformed
+
+        int selectedRow = courtTable.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Please select a court from the table first.",
+                    "No Court Selected",
+                    JOptionPane.WARNING_MESSAGE
+            );
+            return;
+        }
+
+        Court selectedCourt = courtList.get(selectedRow);
+
+        if (!courtList.get(selectedRow).isCourtStatus().equalsIgnoreCase("In Match")) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "The selected court does not have an active match to stop.",
+                    "No Active Match",
+                    JOptionPane.WARNING_MESSAGE
+            );
+            return;
+        }
+
+        int confirm = JOptionPane.showConfirmDialog(
+                this,
+                "Are you sure you want to stop the match on '" + selectedCourt.getCourtNumber() + "'?",
+                "Confirm Stop Match",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE
+        );
+
+        if (confirm != JOptionPane.YES_OPTION) {
+            return; // User clicked No or closed the dialog
+        }
+    }//GEN-LAST:event_finishGameBtnActionPerformed
+
     public static void main(String args[]) {
 
         FlatMacLightLaf.setup();
@@ -948,6 +1030,7 @@ public class Dashboard extends javax.swing.JFrame {
     private javax.swing.JButton deleteCourtBtn;
     private javax.swing.JLabel eligibleCounter;
     private javax.swing.JPanel eventLogPanel;
+    private javax.swing.JButton finishGameBtn;
     private javax.swing.JLabel gamesPlayedCounter;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
