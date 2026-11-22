@@ -6,13 +6,13 @@ public class Player {
     private String playerID;
     private String playerName;
     private int playerLimit = 0;
-    private boolean playerStatus;
+    private String playerStatus;
     
-    public boolean isPlayerStatus() {
+    public String isPlayerStatus() {
         return playerStatus;
     }
     
-    public void setPlayerStatus(boolean playerStatus) {
+    public void setPlayerStatus(String playerStatus) {
         this.playerStatus = playerStatus;
     }
    
@@ -45,7 +45,7 @@ public class Player {
         this.playerID = playerID;
     }
 
-    public Player(String playerID, String playerName, int playerLimit, boolean playerStatus) {
+    public Player(String playerID, String playerName, int playerLimit, String playerStatus) {
         this.playerID = playerID;
         this.playerName = playerName;
         this.playerLimit = playerLimit;

@@ -1,6 +1,7 @@
 package com.courtflow.view;
 
 import com.courtflow.model.Court;
+import com.courtflow.validations.courtValidation;
 import com.formdev.flatlaf.themes.FlatMacLightLaf;
 import java.awt.Color;
 import java.io.IOException;
@@ -11,13 +12,13 @@ public class addCourtFrame extends javax.swing.JFrame {
 
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(addCourtFrame.class.getName());
     private Dashboard dashboard;
-    
-     public addCourtFrame(Dashboard dashboard) {
-        initComponents();
-        
+    private courtValidation duplicate = new courtValidation();
+    public addCourtFrame(Dashboard dashboard) {
+        this();
         this.dashboard = dashboard;
     }
-     
+    
+   
     public addCourtFrame() {
         initComponents();
         this.getContentPane().setBackground(Color.WHITE);
@@ -51,7 +52,7 @@ public class addCourtFrame extends javax.swing.JFrame {
 
         tfSurface.addActionListener(this::tfSurfaceActionPerformed);
 
-        cbStatus.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Available(Ready)" }));
+        cbStatus.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Ready" }));
         cbStatus.setFocusable(false);
 
         jLabel2.setFont(new java.awt.Font("Segoe UI", 1, 11)); // NOI18N
@@ -150,23 +151,37 @@ public class addCourtFrame extends javax.swing.JFrame {
         String status = cbStatus.getSelectedItem().toString();
         String surfaceNote = tfSurface.getText();
         
-        if (  name == null || name.isBlank() || surfaceNote == null || surfaceNote.isBlank() ) {
-            JOptionPane.showMessageDialog(
+        try {
+            if ( duplicate.duplicateName(name)|| name == null || name.isBlank() || surfaceNote == null || surfaceNote.isBlank() ) {
+                JOptionPane.showMessageDialog(
                         this,
-                        "Invalid product details. Please check all fields.",
+                        "Invalid court details. Please check all fields.",
                         "Validation Error",
                         JOptionPane.WARNING_MESSAGE
                 );
-            return;
-        } else {
-            Court newCourt = new Court(name,status, surfaceNote);
-             if (dashboard != null) {
-                try {
-                    dashboard.addNewCourt(newCourt);
-                } catch (IOException ex) {
-                    System.getLogger(addCourtFrame.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
+                return;
+            } else {
+                Court newCourt = new Court(name,status, surfaceNote);
+                if (dashboard != null) {
+                    try {
+                        dashboard.addNewCourt(newCourt);
+                    } catch (IOException ex) {
+                        System.getLogger(addCourtFrame.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
+                    }
                 }
-                }
+                dashboard.addTotalCourtCounter();
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Product added successfully!",
+                        "Success",
+                        JOptionPane.INFORMATION_MESSAGE
+                );
+                
+                tfCourtName.setText("");
+                tfSurface.setText("");
+            }
+        } catch (IOException ex) {
+            System.getLogger(addCourtFrame.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
         }
     }//GEN-LAST:event_createCourtBtnActionPerformed
 

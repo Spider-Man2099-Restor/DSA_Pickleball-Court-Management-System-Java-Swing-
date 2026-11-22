@@ -3,6 +3,7 @@ package com.courtflow.view;
 import com.courtflow.io.FileUtil;
 import com.courtflow.model.Court;
 import com.courtflow.model.Player;
+import com.courtflow.validations.courtValidation;
 import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.themes.FlatMacLightLaf;
 import java.awt.Color;
@@ -22,13 +23,21 @@ import javax.swing.table.JTableHeader;
 public class Dashboard extends javax.swing.JFrame {
 
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(Dashboard.class.getName());
+    private courtValidation duplicate = new courtValidation();
 
     private ArrayList<Court> courtList = new ArrayList<>();
-    private Queue<Player> playerQueue = new LinkedList<>();
+    private ArrayList<Player> playerQueue = new ArrayList<>();
 
     public Dashboard() {
         initComponents();
         loadCourtsToTable();
+        countAvailableCourts();
+        loadPlayersToTable();
+        countEligibleAndCdPlayers();
+        playerCounter.setText("" + playerQueue.size());
+        totalCourtsCounter.setText("" + courtList.size());
+        totalPlayers.setText(playerQueue.size() + " Players in total");
+
         //new Color(235, 241, 248)
         //EBF1F8
         this.getContentPane().setBackground(Color.WHITE);
@@ -96,7 +105,7 @@ public class Dashboard extends javax.swing.JFrame {
         jLabel16 = new javax.swing.JLabel();
         cooldownCounter = new javax.swing.JLabel();
         jLabel18 = new javax.swing.JLabel();
-        jLabel19 = new javax.swing.JLabel();
+        totalPlayers = new javax.swing.JLabel();
         jPanel4 = new javax.swing.JPanel();
         jLabel10 = new javax.swing.JLabel();
         gamesPlayedCounter = new javax.swing.JLabel();
@@ -219,7 +228,7 @@ public class Dashboard extends javax.swing.JFrame {
 
         jLabel14.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         jLabel14.setForeground(new java.awt.Color(153, 153, 153));
-        jLabel14.setText("15 Max");
+        jLabel14.setText("20 Max");
 
         slotsCounter.setForeground(new java.awt.Color(51, 51, 51));
         slotsCounter.setText("0 slots open");
@@ -232,14 +241,14 @@ public class Dashboard extends javax.swing.JFrame {
                 .addGap(10, 10, 10)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel8, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jProgressBar1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jProgressBar1, javax.swing.GroupLayout.DEFAULT_SIZE, 197, Short.MAX_VALUE)
                     .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addComponent(playerCounter, javax.swing.GroupLayout.PREFERRED_SIZE, 20, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(playerCounter, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabel13, javax.swing.GroupLayout.PREFERRED_SIZE, 14, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jLabel14, javax.swing.GroupLayout.PREFERRED_SIZE, 51, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 36, Short.MAX_VALUE)
+                        .addComponent(jLabel14, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGap(18, 18, 18)
                         .addComponent(slotsCounter)))
                 .addContainerGap())
         );
@@ -284,8 +293,8 @@ public class Dashboard extends javax.swing.JFrame {
         jLabel18.setForeground(new java.awt.Color(51, 51, 51));
         jLabel18.setText("Cooldown");
 
-        jLabel19.setForeground(new java.awt.Color(51, 51, 51));
-        jLabel19.setText("0 Players in total");
+        totalPlayers.setForeground(new java.awt.Color(51, 51, 51));
+        totalPlayers.setText("0 Players in total");
 
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
@@ -306,7 +315,7 @@ public class Dashboard extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabel18)
                         .addGap(0, 27, Short.MAX_VALUE))
-                    .addComponent(jLabel19, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(totalPlayers, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         jPanel3Layout.setVerticalGroup(
@@ -324,7 +333,7 @@ public class Dashboard extends javax.swing.JFrame {
                         .addComponent(eligibleCounter)
                         .addComponent(jLabel15)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jLabel19)
+                .addComponent(totalPlayers)
                 .addContainerGap(10, Short.MAX_VALUE))
         );
 
@@ -525,10 +534,7 @@ public class Dashboard extends javax.swing.JFrame {
 
         waitingQueueTable.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {"P001", "Kyla Ruth", "1/2", "Eligible"},
-                {"P002", "April Lorraine", "2/2", "Cooldown"},
-                {"P003", "Bianca", "1/2", "Eligible"},
-                {"P004", "Angel", "1/2", "Eligible"}
+
             },
             new String [] {
                 "Player ID", "Name", "Games", "Status"
@@ -607,6 +613,7 @@ public class Dashboard extends javax.swing.JFrame {
         addPlayerBtn.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         addPlayerBtn.setForeground(new java.awt.Color(255, 255, 255));
         addPlayerBtn.setText("+ Add Player");
+        addPlayerBtn.addActionListener(this::addPlayerBtnActionPerformed);
 
         jLabel6.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         jLabel6.setText("EVENT LOG");
@@ -704,7 +711,74 @@ public class Dashboard extends javax.swing.JFrame {
     }//GEN-LAST:event_addCourtBtnActionPerformed
 
     private void leavePlayerBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_leavePlayerBtnActionPerformed
-        // TODO add your handling code here:
+        int selectedRow = waitingQueueTable.getSelectedRow();
+
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Please select a player from the table first.",
+                    "No Court Selected",
+                    JOptionPane.WARNING_MESSAGE
+            );
+            return;
+        }
+
+//        if (playerQueue.get(selectedRow).isPlayerStatus().equalsIgnoreCase("In Match")) {
+//            JOptionPane.showMessageDialog(
+//                    this,
+//                    "Player is still in a match.",
+//                    "Cannot Delete",
+//                    JOptionPane.WARNING_MESSAGE
+//            );
+//            return;
+//        }
+        Player selectedPlayer = playerQueue.get(selectedRow);
+        int confirm = JOptionPane.showConfirmDialog(
+                this,
+                "Are you sure you want to delete '" + selectedPlayer.getPlayerName() + "'?",
+                "Confirm Delete",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE
+        );
+
+        if (confirm != JOptionPane.YES_OPTION) {
+            return; // User clicked No or closed the dialog
+        }
+
+        try {
+            // 3. Remove from ArrayList in memory
+            playerQueue.remove(selectedRow);
+
+            // 4. Rebuild lines and overwrite Products.txt
+            List<String> lines = new ArrayList<>();
+
+            for (Player newPlayer : playerQueue) {
+                lines.add(newPlayer.getPlayerID() + "|" + newPlayer.getPlayerName() + "|"
+                        + newPlayer.getPlayerLimit() + "|" + newPlayer.isPlayerStatus());
+            }
+            FileUtil.writeAllLines("Players.txt", lines);
+
+            // 5. Refresh players on screen
+            loadPlayersToTable();
+            countEligibleAndCdPlayers();
+            playerCounter.setText("" + (playerQueue.size()));
+            totalPlayers.setText(playerQueue.size() + " Players in total");
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Player deleted successfully!",
+                    "Deleted",
+                    JOptionPane.INFORMATION_MESSAGE
+            );
+
+        } catch (IOException ex) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Error deleting court: " + ex.getMessage(),
+                    "File Error",
+                    JOptionPane.ERROR_MESSAGE
+            );
+        }
+
     }//GEN-LAST:event_leavePlayerBtnActionPerformed
 
     private void tfPlayerNameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tfPlayerNameActionPerformed
@@ -712,10 +786,139 @@ public class Dashboard extends javax.swing.JFrame {
     }//GEN-LAST:event_tfPlayerNameActionPerformed
 
     private void deleteCourtBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteCourtBtnActionPerformed
-        // TODO add your handling code here:
+        int selectedRow = courtTable.getSelectedRow();
+
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Please select a court from the table first.",
+                    "No Court Selected",
+                    JOptionPane.WARNING_MESSAGE
+            );
+            return;
+        }
+
+        Court selectedCourt = courtList.get(selectedRow);
+
+        if (courtList.get(selectedRow).isCourtStatus().equalsIgnoreCase("In Match")) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "The selected court is currently in a match. Please choose an available court.",
+                    "Court Occupied",
+                    JOptionPane.WARNING_MESSAGE
+            );
+            return;
+        }
+
+        int confirm = JOptionPane.showConfirmDialog(
+                this,
+                "Are you sure you want to delete '" + selectedCourt.getCourtNumber() + "'?",
+                "Confirm Delete",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE
+        );
+
+        if (confirm != JOptionPane.YES_OPTION) {
+            return; // User clicked No or closed the dialog
+        }
+
+        try {
+            // 3. Remove from ArrayList in memory
+            courtList.remove(selectedRow);
+
+            // 4. Rebuild lines and overwrite Products.txt
+            List<String> lines = new ArrayList<>();
+            for (Court p : courtList) {
+                lines.add(p.getCourtNumber() + "|" + p.isCourtStatus() + "|"
+                        + p.getCourtNote());
+            }
+            FileUtil.writeAllLines("Courts.txt", lines);
+
+            // 5. Refresh productsTable on screen
+            loadCourtsToTable();
+
+            totalCourtsCounter.setText("" + (courtList.size()));
+            countAvailableCourts();
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Court deleted successfully!",
+                    "Deleted",
+                    JOptionPane.INFORMATION_MESSAGE
+            );
+
+        } catch (IOException ex) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Error deleting court: " + ex.getMessage(),
+                    "File Error",
+                    JOptionPane.ERROR_MESSAGE
+            );
+        }
     }//GEN-LAST:event_deleteCourtBtnActionPerformed
 
+    private void addPlayerBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addPlayerBtnActionPerformed
+
+        String id = tfPlayerId.getText();
+        String name = tfPlayerName.getText();
+
+        if (playerQueue.size() >= 20) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Player queue is full. Maximum of 20 players allowed.",
+                    "Queue Full",
+                    JOptionPane.WARNING_MESSAGE
+            );
+            return;
+        }
+
+        try {
+            if (duplicate.duplicateId(id) || id == null || id.isBlank() || name == null || name.isBlank()) {
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Invalid player details. Please check all fields.",
+                        "Validation Error",
+                        JOptionPane.WARNING_MESSAGE
+                );
+                return;
+
+            } else {
+                Player newPlayer = new Player(id, name, 0, "Eligible");
+
+                // 1. Add to Queue
+                playerQueue.add(newPlayer);
+
+                // 2. Add directly to productsTable
+                DefaultTableModel model = (DefaultTableModel) waitingQueueTable.getModel();
+                model.addRow(new Object[]{
+                    newPlayer.getPlayerID(), newPlayer.getPlayerName(),
+                    newPlayer.getPlayerLimit() + "/2", newPlayer.isPlayerStatus()
+                });
+
+                // 3. Write to Products.txt
+                String line = newPlayer.getPlayerID() + "|" + newPlayer.getPlayerName() + "|"
+                        + newPlayer.getPlayerLimit() + "|" + newPlayer.isPlayerStatus();
+
+                FileUtil.appendLine("Players.txt", line);
+                countEligibleAndCdPlayers();
+                playerCounter.setText("" + playerQueue.size());
+                totalPlayers.setText(playerQueue.size() + " Players in total");
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Player added successfully!",
+                        "Success",
+                        JOptionPane.INFORMATION_MESSAGE
+                );
+                tfPlayerId.setText("");
+                tfPlayerName.setText("");
+
+            }
+        } catch (IOException ex) {
+            System.getLogger(addCourtFrame.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
+        }
+    }//GEN-LAST:event_addPlayerBtnActionPerformed
+
     public static void main(String args[]) {
+
         FlatMacLightLaf.setup();
         //UIManager.put("Panel.background", Color.WHITE);
 
@@ -756,7 +959,6 @@ public class Dashboard extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel16;
     private javax.swing.JLabel jLabel17;
     private javax.swing.JLabel jLabel18;
-    private javax.swing.JLabel jLabel19;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel21;
     private javax.swing.JLabel jLabel22;
@@ -787,6 +989,7 @@ public class Dashboard extends javax.swing.JFrame {
     private javax.swing.JTextField tfPlayerId;
     private javax.swing.JTextField tfPlayerName;
     private javax.swing.JLabel totalCourtsCounter;
+    private javax.swing.JLabel totalPlayers;
     private javax.swing.JTable waitingQueueTable;
     // End of variables declaration//GEN-END:variables
 
@@ -809,7 +1012,7 @@ public class Dashboard extends javax.swing.JFrame {
     }
 
     public void loadCourtsToTable() {
-        
+
         courtList.clear(); // Keeps productList synced with the table
         DefaultTableModel model = (DefaultTableModel) courtTable.getModel();
         model.setRowCount(0);
@@ -850,4 +1053,74 @@ public class Dashboard extends javax.swing.JFrame {
         }
     }
 
+    public void addTotalCourtCounter() {
+        totalCourtsCounter.setText("" + (courtList.size()));
+    }
+
+    public void countAvailableCourts() {
+        int c = 0;
+        for (Court court : courtList) {
+            if (court.isCourtStatus().contains("Ready")) {
+                c++;
+            }
+        }
+        availableCourtsCounter.setText("" + c);
+    }
+
+    public void loadPlayersToTable() {
+
+        playerQueue.clear(); // Keeps productList synced with the table
+        DefaultTableModel model = (DefaultTableModel) waitingQueueTable.getModel();
+        model.setRowCount(0);
+
+        try {
+            List<String> lines = FileUtil.readLines("Players.txt");
+
+            for (String line : lines) {
+                if (line.isBlank()) {
+                    continue;
+                }
+
+                String[] p = line.split("\\|");
+
+                if (p.length >= 4) {
+                    // 1. Add Product object into productList so Edit/Delete works
+                    // 1. Add Product object into productList so Edit/Delete works
+                    Player player = new Player(
+                            p[0].trim(), p[1].trim(), Integer.parseInt(p[2]), p[3].trim()
+                    );
+                    playerQueue.add(player);
+
+// 2. Add row into productsTable
+                    model.addRow(new Object[]{
+                        player.getPlayerID(), player.getPlayerName(),
+                        player.getPlayerLimit() + "/2", player.isPlayerStatus()
+                    });
+
+                }
+            }
+        } catch (IOException ex) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Failed to load products: " + ex.getMessage(),
+                    "File Error",
+                    JOptionPane.ERROR_MESSAGE
+            );
+        }
+    }
+
+    public void countEligibleAndCdPlayers() {
+        int c = 0;
+        int d = 0;
+        for (Player p : playerQueue) {
+            if (p.isPlayerStatus().contains("Eligible")) {
+                c++;
+            } else if (p.isPlayerStatus().contains("Cooldown")) {
+                d++;
+            }
+        }
+        slotsCounter.setText((20 - playerQueue.size()) + " slots open");
+        eligibleCounter.setText("" + c);
+        cooldownCounter.setText("" + d);
+    }
 }

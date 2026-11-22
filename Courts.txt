@@ -1,2 +1,4 @@
-Court 1|Available(Ready)|Indoor
-Court 2|Available(Ready)|Outdoor
+Court 1|Ready|Indoor
+Court 2|Ready|Outdoor
+Court 3|Ready|Outdoor
+Court 4|Ready|Outdoor
