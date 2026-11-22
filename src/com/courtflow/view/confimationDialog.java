@@ -5,14 +5,42 @@ import com.formdev.flatlaf.themes.FlatMacLightLaf;
 import java.awt.Color;
 import javax.swing.BorderFactory;
 import javax.swing.UIManager;
+import com.courtflow.model.Player;
+import java.util.List;
+import javax.swing.ButtonGroup;
+import javax.swing.JCheckBox;
+import javax.swing.JLabel;
 
 public class confimationDialog extends javax.swing.JDialog {
 
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(confimationDialog.class.getName());
+    private static final int MAX_GAMES = 2;
+    private boolean confirmed = false;
+    private JLabel[] nameLabels;
+    private JLabel[] gameLabels;
+    private JCheckBox[] continueBoxes;
+    private JCheckBox[] leaveBoxes;
 
     public confimationDialog(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
         initComponents();
+
+        nameLabels = new JLabel[]{p1Name, p2Name, p3Name, p4Name};
+        gameLabels = new JLabel[]{gameLimitCooldown1, gameLimitCooldown2, gameLimitCooldown3, gameLimitCooldown4};
+        continueBoxes = new JCheckBox[]{P1continueCheckBox1, P2continueCheckBox2, P3continueCheckBox2, P4continueCheckBox4};
+        leaveBoxes = new JCheckBox[]{P1leaveCheckBox1, P2leaveCheckBox2, P3leaveCheckBox3, P4leaveCheckBox4};
+
+        for (int i = 0; i < 4; i++) {
+            ButtonGroup group = new ButtonGroup();
+            group.add(continueBoxes[i]);
+            group.add(leaveBoxes[i]);
+            continueBoxes[i].setSelected(true);
+        }
+
+        confirmBtn.addActionListener(e -> {
+            confirmed = true;
+            dispose();
+        });
 
         headerPanel.putClientProperty(FlatClientProperties.STYLE,
                 "arc: 20; background: #FFFFFF; border: 1,1,1,1, #E2E8F0, 1, 20");
@@ -120,14 +148,13 @@ public class confimationDialog extends javax.swing.JDialog {
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, p1PanelLayout.createSequentialGroup()
                 .addContainerGap(17, Short.MAX_VALUE)
                 .addGroup(p1PanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(gameLimitCooldown1, javax.swing.GroupLayout.PREFERRED_SIZE, 400, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(p1Name, javax.swing.GroupLayout.PREFERRED_SIZE, 183, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGroup(p1PanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                        .addComponent(gameLimitCooldown1, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addGroup(p1PanelLayout.createSequentialGroup()
-                            .addComponent(P1continueCheckBox1)
-                            .addGap(18, 18, 18)
-                            .addComponent(P1leaveCheckBox1))))
-                .addGap(223, 223, 223))
+                    .addGroup(p1PanelLayout.createSequentialGroup()
+                        .addComponent(P1continueCheckBox1)
+                        .addGap(18, 18, 18)
+                        .addComponent(P1leaveCheckBox1)))
+                .addContainerGap())
         );
         p1PanelLayout.setVerticalGroup(
             p1PanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -415,4 +442,33 @@ public class confimationDialog extends javax.swing.JDialog {
     private javax.swing.JLabel p4Name;
     private javax.swing.JPanel p4Panel;
     // End of variables declaration//GEN-END:variables
+
+    public void setPlayers(String courtNumber, List<Player> players) {
+        setTitle("Post-Game Continuation - " + courtNumber);
+        for (int i = 0; i < 4; i++) {
+            boolean exists = i < players.size();
+            continueBoxes[i].setEnabled(exists);
+            leaveBoxes[i].setEnabled(exists);
+            if (!exists) {
+                nameLabels[i].setText("-");
+                gameLabels[i].setText("");
+                continue;
+            }
+            Player p = players.get(i);
+            int after = p.getPlayerLimit() + 1;
+            nameLabels[i].setText(p.getPlayerName() + "  (" + p.getPlayerID() + ")");
+            gameLabels[i].setText("Games : " + p.getPlayerLimit() + "/" + MAX_GAMES
+                    + (after >= MAX_GAMES ? "  (Cooldown next)" : ""));
+            continueBoxes[i].setSelected(true);
+        }
+    }
+
+    public boolean isConfirmed() {
+        return confirmed;
+    }
+
+    // true = Continue, false = Leave
+    public boolean isContinuing(int index) {
+        return continueBoxes[index].isSelected();
+    }
 }

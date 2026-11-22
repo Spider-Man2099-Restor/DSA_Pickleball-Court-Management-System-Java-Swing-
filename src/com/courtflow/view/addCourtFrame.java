@@ -146,7 +146,7 @@ public class addCourtFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_cancelBtnActionPerformed
 
     private void createCourtBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_createCourtBtnActionPerformed
-    
+        
         String name = tfCourtName.getText();
         String status = cbStatus.getSelectedItem().toString();
         String surfaceNote = tfSurface.getText();
@@ -172,7 +172,7 @@ public class addCourtFrame extends javax.swing.JFrame {
                 dashboard.addTotalCourtCounter();
                 JOptionPane.showMessageDialog(
                         this,
-                        "Product added successfully!",
+                        "Court added successfully!",
                         "Success",
                         JOptionPane.INFORMATION_MESSAGE
                 );

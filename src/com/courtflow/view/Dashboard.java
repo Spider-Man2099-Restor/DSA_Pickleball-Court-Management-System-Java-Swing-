@@ -10,6 +10,7 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Insets;
 import java.io.IOException;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -19,6 +20,10 @@ import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 public class Dashboard extends javax.swing.JFrame {
 
@@ -27,16 +32,30 @@ public class Dashboard extends javax.swing.JFrame {
 
     private ArrayList<Court> courtList = new ArrayList<>();
     private ArrayList<Player> playerQueue = new ArrayList<>();
+    private static final int MAX_PLAYERS = 20;   // waiting + playing
+    private static final int MAX_GAMES = 2;      // consecutive games before Cooldown
+    private static final int MATCH_SIZE = 4;     // doubles
+    private static final DateTimeFormatter LOG_TIME = DateTimeFormatter.ofPattern("HH:mm:ss");
+    private final Map<String, List<Player>> activeMatches = new LinkedHashMap<>();
+    private int gamesPlayed = 0;   // session stat (resets when the app restarts)
 
     public Dashboard() {
         initComponents();
+        FileUtil.createStartupFile("Courts.txt");
+        FileUtil.createStartupFile("Players.txt");
+        FileUtil.createStartupFile("Matches.txt");
+
         loadCourtsToTable();
-        countAvailableCourts();
         loadPlayersToTable();
-        countEligibleAndCdPlayers();
-        playerCounter.setText("" + playerQueue.size());
-        totalCourtsCounter.setText("" + courtList.size());
-        totalPlayers.setText(playerQueue.size() + " Players in total");
+        loadMatches();
+
+        jTextArea1.setLineWrap(true);
+        jTextArea1.setWrapStyleWord(true);
+        waitingQueueTable.setDefaultEditor(Object.class, null);   // queue cells are read-only
+        jProgressBar1.setMaximum(MAX_PLAYERS);
+        updateAllStats();
+        log("Courtflow started: " + courtList.size() + " court(s), " + playerQueue.size()
+                + " waiting, " + playersInMatch() + " playing.");
 
         //new Color(235, 241, 248)
         //EBF1F8
@@ -713,78 +732,32 @@ public class Dashboard extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void addCourtBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addCourtBtnActionPerformed
-        addCourtFrame form = new addCourtFrame(this);
+            addCourtFrame form = new addCourtFrame(this);
         form.setVisible(true);
     }//GEN-LAST:event_addCourtBtnActionPerformed
 
     private void leavePlayerBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_leavePlayerBtnActionPerformed
-        int selectedRow = waitingQueueTable.getSelectedRow();
-
+          int selectedRow = waitingQueueTable.getSelectedRow();
+ 
         if (selectedRow == -1) {
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Please select a player from the table first.",
-                    "No Court Selected",
-                    JOptionPane.WARNING_MESSAGE
-            );
+            JOptionPane.showMessageDialog(this, "Please select a player from the table first.",
+                    "No Player Selected", JOptionPane.WARNING_MESSAGE);
             return;
         }
-
-//        if (playerQueue.get(selectedRow).isPlayerStatus().equalsIgnoreCase("In Match")) {
-//            JOptionPane.showMessageDialog(
-//                    this,
-//                    "Player is still in a match.",
-//                    "Cannot Delete",
-//                    JOptionPane.WARNING_MESSAGE
-//            );
-//            return;
-//        }
+ 
         Player selectedPlayer = playerQueue.get(selectedRow);
-        int confirm = JOptionPane.showConfirmDialog(
-                this,
-                "Are you sure you want to delete '" + selectedPlayer.getPlayerName() + "'?",
-                "Confirm Delete",
-                JOptionPane.YES_NO_OPTION,
-                JOptionPane.WARNING_MESSAGE
-        );
-
+        int confirm = JOptionPane.showConfirmDialog(this,
+                "Remove '" + selectedPlayer.getPlayerName() + "' from the queue?",
+                "Confirm Leave", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+ 
         if (confirm != JOptionPane.YES_OPTION) {
-            return; // User clicked No or closed the dialog
+            return;
         }
-
-        try {
-            // 3. Remove from ArrayList in memory
-            playerQueue.remove(selectedRow);
-
-            // 4. Rebuild lines and overwrite Products.txt
-            List<String> lines = new ArrayList<>();
-
-            for (Player newPlayer : playerQueue) {
-                lines.add(newPlayer.getPlayerID() + "|" + newPlayer.getPlayerName() + "|"
-                        + newPlayer.getPlayerLimit() + "|" + newPlayer.isPlayerStatus());
-            }
-            FileUtil.writeAllLines("Players.txt", lines);
-
-            // 5. Refresh players on screen
-            loadPlayersToTable();
-            countEligibleAndCdPlayers();
-            playerCounter.setText("" + (playerQueue.size()));
-            totalPlayers.setText(playerQueue.size() + " Players in total");
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Player deleted successfully!",
-                    "Deleted",
-                    JOptionPane.INFORMATION_MESSAGE
-            );
-
-        } catch (IOException ex) {
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Error deleting court: " + ex.getMessage(),
-                    "File Error",
-                    JOptionPane.ERROR_MESSAGE
-            );
-        }
+ 
+        playerQueue.remove(selectedRow);
+        log(selectedPlayer.getPlayerName() + " (" + selectedPlayer.getPlayerID() + ") left the queue.");
+        saveAll();
+        refreshAll();
 
     }//GEN-LAST:event_leavePlayerBtnActionPerformed
 
@@ -844,8 +817,8 @@ public class Dashboard extends javax.swing.JFrame {
             // 5. Refresh productsTable on screen
             loadCourtsToTable();
 
-            totalCourtsCounter.setText("" + (courtList.size()));
-            countAvailableCourts();
+            log("Court deleted: " + selectedCourt.getCourtNumber());
+            updateAllStats();
             JOptionPane.showMessageDialog(
                     this,
                     "Court deleted successfully!",
@@ -865,138 +838,186 @@ public class Dashboard extends javax.swing.JFrame {
 
     private void addPlayerBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addPlayerBtnActionPerformed
 
-        String id = tfPlayerId.getText();
-        String name = tfPlayerName.getText();
-
-        if (playerQueue.size() >= 20) {
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Player queue is full. Maximum of 20 players allowed.",
-                    "Queue Full",
-                    JOptionPane.WARNING_MESSAGE
-            );
+        String id = tfPlayerId.getText().trim();
+        String name = tfPlayerName.getText().trim();
+ 
+        if (playerQueue.size() + playersInMatch() >= MAX_PLAYERS) {
+            JOptionPane.showMessageDialog(this,
+                    "Player limit reached. Maximum of " + MAX_PLAYERS + " players (waiting + playing).",
+                    "Queue Full", JOptionPane.WARNING_MESSAGE);
+            log("Add player blocked: " + MAX_PLAYERS + " player limit reached.");
             return;
         }
-
+ 
         try {
-            if (duplicate.duplicateId(id) || id == null || id.isBlank() || name == null || name.isBlank()) {
-                JOptionPane.showMessageDialog(
-                        this,
-                        "Invalid player details. Please check all fields.",
-                        "Validation Error",
-                        JOptionPane.WARNING_MESSAGE
-                );
+            if (id.isBlank() || name.isBlank() || isPlayerIdTaken(id) || duplicate.duplicateId(id)) {
+                JOptionPane.showMessageDialog(this,
+                        "Invalid player details. Please check all fields (Player ID must be unique).",
+                        "Validation Error", JOptionPane.WARNING_MESSAGE);
                 return;
-
-            } else {
-                Player newPlayer = new Player(id, name, 0, "Eligible");
-
-                // 1. Add to Queue
-                playerQueue.add(newPlayer);
-
-                // 2. Add directly to productsTable
-                DefaultTableModel model = (DefaultTableModel) waitingQueueTable.getModel();
-                model.addRow(new Object[]{
-                    newPlayer.getPlayerID(), newPlayer.getPlayerName(),
-                    newPlayer.getPlayerLimit() + "/2", newPlayer.isPlayerStatus()
-                });
-
-                // 3. Write to Products.txt
-                String line = newPlayer.getPlayerID() + "|" + newPlayer.getPlayerName() + "|"
-                        + newPlayer.getPlayerLimit() + "|" + newPlayer.isPlayerStatus();
-
-                FileUtil.appendLine("Players.txt", line);
-                countEligibleAndCdPlayers();
-                playerCounter.setText("" + playerQueue.size());
-                totalPlayers.setText(playerQueue.size() + " Players in total");
-                JOptionPane.showMessageDialog(
-                        this,
-                        "Player added successfully!",
-                        "Success",
-                        JOptionPane.INFORMATION_MESSAGE
-                );
-                tfPlayerId.setText("");
-                tfPlayerName.setText("");
-
             }
+ 
+            Player newPlayer = new Player(id, name, 0, "Eligible");
+            playerQueue.add(newPlayer);            // always joins at the rear (FIFO)
+ 
+            saveAll();
+            refreshAll();
+            log("Player joined the rear of the queue: " + name + " (" + id + ") - position " + playerQueue.size() + ".");
+ 
+            tfPlayerId.setText("");
+            tfPlayerName.setText("");
+            JOptionPane.showMessageDialog(this, "Player added successfully!", "Success",
+                    JOptionPane.INFORMATION_MESSAGE);
+ 
         } catch (IOException ex) {
-            System.getLogger(addCourtFrame.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
+            JOptionPane.showMessageDialog(this, "File error: " + ex.getMessage(),
+                    "File Error", JOptionPane.ERROR_MESSAGE);
         }
     }//GEN-LAST:event_addPlayerBtnActionPerformed
 
     private void startMatchBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startMatchBtnActionPerformed
-
         int selectedRow = courtTable.getSelectedRow();
         if (selectedRow == -1) {
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Please select a court from the table first.",
-                    "No Court Selected",
-                    JOptionPane.WARNING_MESSAGE
-            );
+            JOptionPane.showMessageDialog(this, "Please select a court from the table first.",
+                    "No Court Selected", JOptionPane.WARNING_MESSAGE);
             return;
         }
+
         Court selectedCourt = courtList.get(selectedRow);
+        String courtNo = selectedCourt.getCourtNumber();
 
-        if (courtList.get(selectedRow).isCourtStatus().equalsIgnoreCase("In Match")) {
-            JOptionPane.showMessageDialog(
-                    this,
+        if (!selectedCourt.isCourtStatus().equalsIgnoreCase("Ready")) {
+            JOptionPane.showMessageDialog(this,
                     "The selected court is currently in a match. Please choose an available court.",
-                    "Court Occupied",
-                    JOptionPane.WARNING_MESSAGE
-            );
+                    "Court Occupied", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
-        int confirm = JOptionPane.showConfirmDialog(
-                this,
-                "Are you sure you want to start at '" + selectedCourt.getCourtNumber() + "'?",
-                "Confirm Delete",
-                JOptionPane.YES_NO_OPTION,
-                JOptionPane.WARNING_MESSAGE
-        );
-
-        if (confirm != JOptionPane.YES_OPTION) {
-            return; // User clicked No or closed the dialog
+        List<Player> picked = pickNextPlayers();
+        if (picked == null) {
+            String msg = "Need " + MATCH_SIZE + " players to start a match, but only "
+                    + playerQueue.size() + " are waiting.";
+            JOptionPane.showMessageDialog(this, msg, "Not Enough Players", JOptionPane.WARNING_MESSAGE);
+            log("Cannot start " + courtNo + ": " + msg);
+            return;
         }
+
+        StringBuilder who = new StringBuilder();
+        for (int i = 0; i < picked.size(); i++) {
+            Player p = picked.get(i);
+            who.append("  ").append(i + 1).append(". ").append(p.getPlayerName())
+                    .append(" (").append(p.getPlayerID()).append(")\n");
+        }
+        int confirm = JOptionPane.showConfirmDialog(this,
+                "Start a match on '" + courtNo + "' with the next players in the queue?\n\n" + who,
+                "Confirm Start Match", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+        if (confirm != JOptionPane.YES_OPTION) {
+            return;
+        }
+
+        // 1. take the 4 players out of the waiting queue
+        List<Player> onCourt = new ArrayList<>();
+        for (Player p : picked) {
+            playerQueue.remove(p);
+            if (isEligible(p)) {
+                onCourt.add(p);
+            } else {
+                // not enough eligible players, so a Cooldown player was called up early
+                onCourt.add(withGames(p, 0, "Eligible"));
+                log(p.getPlayerName() + " was called up early from Cooldown to fill the match.");
+            }
+        }
+
+        // 2. everyone still in Cooldown has now sat out one match start -> Eligible again
+        for (int i = 0; i < playerQueue.size(); i++) {
+            Player p = playerQueue.get(i);
+            if (isCooldown(p)) {
+                playerQueue.set(i, withGames(p, 0, "Eligible"));
+                log(p.getPlayerName() + " finished Cooldown and is Eligible again (0/" + MAX_GAMES + ").");
+            }
+        }
+
+        // 3. court becomes In Match and remembers who is playing
+        setCourtStatus(selectedRow, "In Match");
+        activeMatches.put(courtNo, onCourt);
+
+        log("MATCH STARTED on " + courtNo + " (Doubles): " + namesOf(onCourt));
+        saveAll();
+        refreshAll();
     }//GEN-LAST:event_startMatchBtnActionPerformed
 
     private void finishGameBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_finishGameBtnActionPerformed
 
         int selectedRow = courtTable.getSelectedRow();
         if (selectedRow == -1) {
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Please select a court from the table first.",
-                    "No Court Selected",
-                    JOptionPane.WARNING_MESSAGE
-            );
+            JOptionPane.showMessageDialog(this, "Please select a court from the table first.",
+                    "No Court Selected", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
         Court selectedCourt = courtList.get(selectedRow);
+        String courtNo = selectedCourt.getCourtNumber();
 
-        if (!courtList.get(selectedRow).isCourtStatus().equalsIgnoreCase("In Match")) {
-            JOptionPane.showMessageDialog(
-                    this,
+        if (!selectedCourt.isCourtStatus().equalsIgnoreCase("In Match")) {
+            JOptionPane.showMessageDialog(this,
                     "The selected court does not have an active match to stop.",
-                    "No Active Match",
-                    JOptionPane.WARNING_MESSAGE
-            );
+                    "No Active Match", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
-        int confirm = JOptionPane.showConfirmDialog(
-                this,
-                "Are you sure you want to stop the match on '" + selectedCourt.getCourtNumber() + "'?",
-                "Confirm Stop Match",
-                JOptionPane.YES_NO_OPTION,
-                JOptionPane.QUESTION_MESSAGE
-        );
-
-        if (confirm != JOptionPane.YES_OPTION) {
-            return; // User clicked No or closed the dialog
+        List<Player> players = activeMatches.get(courtNo);
+        if (players == null || players.isEmpty()) {
+            // safety net: court says In Match but we do not know who is playing
+            setCourtStatus(selectedRow, "Ready");
+            log("WARNING: no player data for " + courtNo + " - court reset to Ready.");
+            saveAll();
+            refreshAll();
+            JOptionPane.showMessageDialog(this,
+                    "No player data was found for " + courtNo + ". The court was reset to Ready.",
+                    "Court Reset", JOptionPane.WARNING_MESSAGE);
+            return;
         }
+
+        // ask every player: Continue or Leave
+        confimationDialog dialog = new confimationDialog(this, true);
+        dialog.setPlayers(courtNo, players);
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);   // waits here until the dialog is closed
+
+        if (!dialog.isConfirmed()) {
+            log("Finish cancelled on " + courtNo + " - match is still in progress.");
+            return;
+        }
+
+        gamesPlayed++;
+        List<Player> backEligible = new ArrayList<>();
+        List<Player> backCooldown = new ArrayList<>();
+
+        for (int i = 0; i < players.size(); i++) {
+            Player p = players.get(i);
+            int games = p.getPlayerLimit() + 1;
+            String label = p.getPlayerName() + " (" + p.getPlayerID() + ")";
+
+            if (!dialog.isContinuing(i)) {
+                log(label + " finished on " + courtNo + " and left the session.");
+            } else if (games >= MAX_GAMES) {
+                backCooldown.add(withGames(p, MAX_GAMES, "Cooldown"));
+                log(label + " reached " + MAX_GAMES + "/" + MAX_GAMES + " games -> Cooldown, placed at the very rear.");
+            } else {
+                backEligible.add(withGames(p, games, "Eligible"));
+                log(label + " continues -> back of the queue (" + games + "/" + MAX_GAMES + ").");
+            }
+        }
+
+        // continuing players go to the rear; Cooldown players go behind everyone
+        playerQueue.addAll(backEligible);
+        playerQueue.addAll(backCooldown);
+        activeMatches.remove(courtNo);
+        setCourtStatus(selectedRow, "Ready");
+
+        log("MATCH FINISHED on " + courtNo + ". Court is Ready. Games played this session: " + gamesPlayed);
+        saveAll();
+        refreshAll();
     }//GEN-LAST:event_finishGameBtnActionPerformed
 
     public static void main(String args[]) {
@@ -1092,6 +1113,9 @@ public class Dashboard extends javax.swing.JFrame {
                 + court.getCourtNote();
 
         FileUtil.appendLine("Courts.txt", line);
+        log("Court added: " + court.getCourtNumber() + " (" + court.getCourtNote() + ")");
+        updateAllStats();
+        
     }
 
     public void loadCourtsToTable() {
@@ -1136,19 +1160,19 @@ public class Dashboard extends javax.swing.JFrame {
         }
     }
 
-    public void addTotalCourtCounter() {
-        totalCourtsCounter.setText("" + (courtList.size()));
-    }
+//    public void addTotalCourtCounter() {
+//        totalCourtsCounter.setText("" + (courtList.size()));
+//    }
 
-    public void countAvailableCourts() {
-        int c = 0;
-        for (Court court : courtList) {
-            if (court.isCourtStatus().contains("Ready")) {
-                c++;
-            }
-        }
-        availableCourtsCounter.setText("" + c);
-    }
+//    public void countAvailableCourts() {
+//        int c = 0;
+//        for (Court court : courtList) {
+//            if (court.isCourtStatus().contains("Ready")) {
+//                c++;
+//            }
+//        }
+//        availableCourtsCounter.setText("" + c);
+//    }
 
     public void loadPlayersToTable() {
 
@@ -1192,18 +1216,239 @@ public class Dashboard extends javax.swing.JFrame {
         }
     }
 
+//    public void countEligibleAndCdPlayers() {
+//        int c = 0;
+//        int d = 0;
+//        for (Player p : playerQueue) {
+//            if (p.isPlayerStatus().contains("Eligible")) {
+//                c++;
+//            } else if (p.isPlayerStatus().contains("Cooldown")) {
+//                d++;
+//            }
+//        }
+//        slotsCounter.setText((20 - playerQueue.size()) + " slots open");
+//        eligibleCounter.setText("" + c);
+//        cooldownCounter.setText("" + d);
+//    }
+     public void addTotalCourtCounter() {
+        updateAllStats();
+    }
+ 
+    public void countAvailableCourts() {
+        updateAllStats();
+    }
+ 
     public void countEligibleAndCdPlayers() {
-        int c = 0;
-        int d = 0;
-        for (Player p : playerQueue) {
-            if (p.isPlayerStatus().contains("Eligible")) {
-                c++;
-            } else if (p.isPlayerStatus().contains("Cooldown")) {
-                d++;
+        updateAllStats();
+    }
+    
+      public void updateAllStats() {
+        // Stats1 - courts
+        int ready = 0;
+        for (Court c : courtList) {
+            if (c.isCourtStatus().equalsIgnoreCase("Ready")) {
+                ready++;
             }
         }
-        slotsCounter.setText((20 - playerQueue.size()) + " slots open");
-        eligibleCounter.setText("" + c);
-        cooldownCounter.setText("" + d);
+        availableCourtsCounter.setText(String.valueOf(ready));
+        totalCourtsCounter.setText(String.valueOf(courtList.size()));
+ 
+        // Stats2 - capacity (waiting + playing)
+        int waiting = playerQueue.size();
+        int playing = playersInMatch();
+        int registered = waiting + playing;
+        playerCounter.setText(String.valueOf(registered));
+        slotsCounter.setText(Math.max(0, MAX_PLAYERS - registered) + " slots open");
+        jProgressBar1.setMaximum(MAX_PLAYERS);
+        jProgressBar1.setValue(registered);
+ 
+        // Stats3 - player status
+        int eligible = 0;
+        int cooldown = 0;
+        for (Player p : playerQueue) {
+            if (isEligible(p)) {
+                eligible++;
+            } else if (isCooldown(p)) {
+                cooldown++;
+            }
+        }
+        eligibleCounter.setText(String.valueOf(eligible));
+        cooldownCounter.setText(String.valueOf(cooldown));
+        totalPlayers.setText(waiting + " waiting, " + playing + " playing");
+ 
+        // Stats4 - session
+        gamesPlayedCounter.setText(String.valueOf(gamesPlayed));
+    }
+ 
+    // ===== event log (jTextArea1) =====
+    private void log(String message) {
+        jTextArea1.append("[" + LocalTime.now().format(LOG_TIME) + "] " + message + "\n");
+        jTextArea1.setCaretPosition(jTextArea1.getDocument().getLength());
+    }
+ 
+    // ===== queue / court rules =====
+    private boolean isEligible(Player p) {
+        return p.isPlayerStatus().equalsIgnoreCase("Eligible");
+    }
+ 
+    private boolean isCooldown(Player p) {
+        return p.isPlayerStatus().toLowerCase().contains("cooldown");
+    }
+ 
+    // next 4 in strict FIFO order; Cooldown players are skipped unless there is no other way to fill the match
+    private List<Player> pickNextPlayers() {
+        List<Player> picked = new ArrayList<>();
+        for (Player p : playerQueue) {
+            if (picked.size() < MATCH_SIZE && isEligible(p)) {
+                picked.add(p);
+            }
+        }
+        for (Player p : playerQueue) {
+            if (picked.size() < MATCH_SIZE && !isEligible(p)) {
+                picked.add(p);
+            }
+        }
+        return picked.size() == MATCH_SIZE ? picked : null;
+    }
+ 
+    private Player withGames(Player p, int games, String status) {
+        return new Player(p.getPlayerID(), p.getPlayerName(), Math.min(games, MAX_GAMES), status);
+    }
+ 
+    private void setCourtStatus(int index, String status) {
+        Court c = courtList.get(index);
+        courtList.set(index, new Court(c.getCourtNumber(), status, c.getCourtNote()));
+    }
+ 
+    private int playersInMatch() {
+        int n = 0;
+        for (List<Player> list : activeMatches.values()) {
+            n += list.size();
+        }
+        return n;
+    }
+ 
+    private boolean isPlayerIdTaken(String id) {
+        for (Player p : playerQueue) {
+            if (p.getPlayerID().equalsIgnoreCase(id)) {
+                return true;
+            }
+        }
+        for (List<Player> list : activeMatches.values()) {
+            for (Player p : list) {
+                if (p.getPlayerID().equalsIgnoreCase(id)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+ 
+    private String namesOf(List<Player> list) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < list.size(); i++) {
+            if (i > 0) {
+                sb.append(", ");
+            }
+            sb.append(list.get(i).getPlayerName());
+        }
+        return sb.toString();
+    }
+ 
+    // ===== tables =====
+    private void refreshAll() {
+        refreshCourtTable();
+        refreshQueueTable();
+        updateAllStats();
+    }
+ 
+    private void refreshCourtTable() {
+        int selected = courtTable.getSelectedRow();   // keep the selected court highlighted
+        DefaultTableModel model = (DefaultTableModel) courtTable.getModel();
+        model.setRowCount(0);
+        for (Court c : courtList) {
+            model.addRow(new Object[]{c.getCourtNumber(), c.isCourtStatus(), c.getCourtNote()});
+        }
+        if (selected >= 0 && selected < courtList.size()) {
+            courtTable.setRowSelectionInterval(selected, selected);
+        }
+    }
+ 
+    private void refreshQueueTable() {
+        DefaultTableModel model = (DefaultTableModel) waitingQueueTable.getModel();
+        model.setRowCount(0);
+        for (Player p : playerQueue) {
+            model.addRow(new Object[]{p.getPlayerID(), p.getPlayerName(),
+                p.getPlayerLimit() + "/" + MAX_GAMES, p.isPlayerStatus()});
+        }
+    }
+ 
+    // ===== files =====
+    private void saveAll() {
+        try {
+            List<String> courts = new ArrayList<>();
+            for (Court c : courtList) {
+                courts.add(c.getCourtNumber() + "|" + c.isCourtStatus() + "|" + c.getCourtNote());
+            }
+            FileUtil.writeAllLines("Courts.txt", courts);
+ 
+            List<String> players = new ArrayList<>();
+            for (Player p : playerQueue) {
+                players.add(p.getPlayerID() + "|" + p.getPlayerName() + "|"
+                        + p.getPlayerLimit() + "|" + p.isPlayerStatus());
+            }
+            FileUtil.writeAllLines("Players.txt", players);
+ 
+            // who is playing where: courtNumber|id|name|games|status
+            List<String> matches = new ArrayList<>();
+            for (Map.Entry<String, List<Player>> e : activeMatches.entrySet()) {
+                for (Player p : e.getValue()) {
+                    matches.add(e.getKey() + "|" + p.getPlayerID() + "|" + p.getPlayerName() + "|"
+                            + p.getPlayerLimit() + "|" + p.isPlayerStatus());
+                }
+            }
+            FileUtil.writeAllLines("Matches.txt", matches);
+        } catch (IOException ex) {
+            JOptionPane.showMessageDialog(this, "Failed to save data: " + ex.getMessage(),
+                    "File Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+ 
+    // restores running matches after a restart and fixes courts that disagree with Matches.txt
+    private void loadMatches() {
+        activeMatches.clear();
+        try {
+            for (String line : FileUtil.readLines("Matches.txt")) {
+                if (line.isBlank()) {
+                    continue;
+                }
+                String[] p = line.split("\\|");
+                if (p.length >= 5) {
+                    activeMatches.computeIfAbsent(p[0].trim(), k -> new ArrayList<>())
+                            .add(new Player(p[1].trim(), p[2].trim(), Integer.parseInt(p[3].trim()), p[4].trim()));
+                }
+            }
+        } catch (IOException | NumberFormatException ex) {
+            log("Could not read Matches.txt: " + ex.getMessage());
+        }
+ 
+        boolean changed = false;
+        for (int i = 0; i < courtList.size(); i++) {
+            Court c = courtList.get(i);
+            boolean marked = c.isCourtStatus().equalsIgnoreCase("In Match");
+            boolean hasMatch = activeMatches.containsKey(c.getCourtNumber());
+            if (marked && !hasMatch) {
+                setCourtStatus(i, "Ready");
+                log(c.getCourtNumber() + " was In Match but had no players saved - reset to Ready.");
+                changed = true;
+            } else if (!marked && hasMatch) {
+                setCourtStatus(i, "In Match");
+                changed = true;
+            }
+        }
+        if (changed) {
+            saveAll();
+            refreshCourtTable();
+        }
     }
 }

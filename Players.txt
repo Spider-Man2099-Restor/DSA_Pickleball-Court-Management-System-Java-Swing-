@@ -1,2 +1,8 @@
-P001|Joshua|0|Eligible
-P002|Eman|0|Eligible
+P005|L|1|Eligible
+P006|K|1|Eligible
+P007|K|1|Eligible
+P008|Jw|1|Eligible
+P001|A|2|Cooldown
+P002|K|2|Cooldown
+P003|Jade|2|Cooldown
+P004|JM|2|Cooldown
