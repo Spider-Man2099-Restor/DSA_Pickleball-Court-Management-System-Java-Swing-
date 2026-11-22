@@ -11,8 +11,10 @@ import javax.swing.UIManager;
 public class addCourtFrame extends javax.swing.JFrame {
 
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(addCourtFrame.class.getName());
+    
     private Dashboard dashboard;
     private courtValidation duplicate = new courtValidation();
+    
     public addCourtFrame(Dashboard dashboard) {
         this();
         this.dashboard = dashboard;

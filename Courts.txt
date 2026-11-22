@@ -1,0 +1,2 @@
+Court 1|In Match|Indoor
+Court 2|Ready|Outdoor
