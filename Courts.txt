@@ -1,5 +1,0 @@
-Court 1|Ready|Indoor
-Court 2|Ready|Outdoor
-Court 3|Ready|Outdoor
-Court 4|Ready|Outdoor
-Court 5|Ready|Outdoor
