@@ -1,21 +1,34 @@
 package com.courtflow.view;
 
+import com.courtflow.io.FileUtil;
+import com.courtflow.model.Court;
+import com.courtflow.model.Player;
 import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.themes.FlatMacLightLaf;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Insets;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
 import javax.swing.BorderFactory;
+import javax.swing.JOptionPane;
 import javax.swing.UIManager;
+import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 
 public class Dashboard extends javax.swing.JFrame {
 
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(Dashboard.class.getName());
 
+    private ArrayList<Court> courtList = new ArrayList<>();
+    private Queue<Player> playerQueue = new LinkedList<>();
+
     public Dashboard() {
         initComponents();
-        
+        loadCourtsToTable();
         //new Color(235, 241, 248)
         //EBF1F8
         this.getContentPane().setBackground(Color.WHITE);
@@ -42,9 +55,7 @@ public class Dashboard extends javax.swing.JFrame {
 
 //        JTableHeader header = courtTable.getTableHeader();
 //        header.setFont(header.getFont().deriveFont(Font.BOLD));
-
 //HEADER PANEL
-
         jPanel1.putClientProperty(FlatClientProperties.STYLE,
                 "arc: 15; background: #FFFFFF; border: 1,1,1,1, #E2E8F0, 1, 15");
         jPanel2.putClientProperty(FlatClientProperties.STYLE,
@@ -55,7 +66,7 @@ public class Dashboard extends javax.swing.JFrame {
                 "arc: 15; background: #FFFFFF; border: 1,1,1,1, #E2E8F0, 1, 15");
         jPanel5.putClientProperty(FlatClientProperties.STYLE,
                 "arc: 15; background: #FFFFFF; border: 1,1,1,1, #E2E8F0, 1, 15");
-        
+
     }
 
     @SuppressWarnings("unchecked")
@@ -103,7 +114,7 @@ public class Dashboard extends javax.swing.JFrame {
         deleteCourtBtn = new javax.swing.JButton();
         MiddlePanel = new javax.swing.JPanel();
         jLabel2 = new javax.swing.JLabel();
-        jButton2 = new javax.swing.JButton();
+        leavePlayerBtn = new javax.swing.JButton();
         jScrollPane2 = new javax.swing.JScrollPane();
         waitingQueueTable = new javax.swing.JTable();
         RightPanel = new javax.swing.JPanel();
@@ -447,25 +458,7 @@ public class Dashboard extends javax.swing.JFrame {
 
         courtTable.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {"Court 1", "Available", "Indoor"},
-                {"Court 2", "Available", "Outdoor"},
-                {null, null, null},
-                {null, null, null},
-                {null, null, null},
-                {null, null, null},
-                {null, null, null},
-                {null, null, null},
-                {null, null, null},
-                {null, null, null},
-                {null, null, null},
-                {null, null, null},
-                {null, null, null},
-                {null, null, null},
-                {null, null, null},
-                {null, null, null},
-                {null, null, null},
-                {null, null, null},
-                {null, null, null}
+
             },
             new String [] {
                 "Court Number", "Status", "Note"
@@ -488,6 +481,7 @@ public class Dashboard extends javax.swing.JFrame {
         deleteCourtBtn.setFont(new java.awt.Font("Segoe UI", 1, 11)); // NOI18N
         deleteCourtBtn.setForeground(new java.awt.Color(255, 255, 255));
         deleteCourtBtn.setText("Delete");
+        deleteCourtBtn.addActionListener(this::deleteCourtBtnActionPerformed);
 
         javax.swing.GroupLayout LeftPanelLayout = new javax.swing.GroupLayout(LeftPanel);
         LeftPanel.setLayout(LeftPanelLayout);
@@ -523,34 +517,18 @@ public class Dashboard extends javax.swing.JFrame {
         jLabel2.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         jLabel2.setText("WAITING QUEUE");
 
-        jButton2.setBackground(new java.awt.Color(225, 29, 72));
-        jButton2.setFont(new java.awt.Font("Segoe UI", 1, 11)); // NOI18N
-        jButton2.setForeground(new java.awt.Color(255, 255, 255));
-        jButton2.setText("Leave");
-        jButton2.addActionListener(this::jButton2ActionPerformed);
+        leavePlayerBtn.setBackground(new java.awt.Color(225, 29, 72));
+        leavePlayerBtn.setFont(new java.awt.Font("Segoe UI", 1, 11)); // NOI18N
+        leavePlayerBtn.setForeground(new java.awt.Color(255, 255, 255));
+        leavePlayerBtn.setText("Leave");
+        leavePlayerBtn.addActionListener(this::leavePlayerBtnActionPerformed);
 
         waitingQueueTable.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {"P001", "Kyla Ruth", "1/2", "Eligible"},
                 {"P002", "April Lorraine", "2/2", "Cooldown"},
                 {"P003", "Bianca", "1/2", "Eligible"},
-                {"P004", "Angel", "1/2", "Eligible"},
-                {"P005", "Charmen", "1/2", "Eligible"},
-                {"P006", "Rachel", "1/2", "Eligible"},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
+                {"P004", "Angel", "1/2", "Eligible"}
             },
             new String [] {
                 "Player ID", "Name", "Games", "Status"
@@ -574,7 +552,7 @@ public class Dashboard extends javax.swing.JFrame {
                         .addGap(22, 22, 22)
                         .addComponent(jLabel2)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jButton2)))
+                        .addComponent(leavePlayerBtn)))
                 .addContainerGap(19, Short.MAX_VALUE))
         );
         MiddlePanelLayout.setVerticalGroup(
@@ -583,7 +561,7 @@ public class Dashboard extends javax.swing.JFrame {
                 .addGap(14, 14, 14)
                 .addGroup(MiddlePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel2)
-                    .addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(leavePlayerBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
                 .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                 .addContainerGap())
@@ -593,6 +571,8 @@ public class Dashboard extends javax.swing.JFrame {
 
         eventLogPanel.setBackground(new java.awt.Color(255, 255, 255));
 
+        jTextArea1.setEditable(false);
+        jTextArea1.setBackground(new java.awt.Color(255, 255, 255));
         jTextArea1.setColumns(20);
         jTextArea1.setRows(5);
         jScrollPane3.setViewportView(jTextArea1);
@@ -608,7 +588,8 @@ public class Dashboard extends javax.swing.JFrame {
         );
         eventLogPanelLayout.setVerticalGroup(
             eventLogPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(eventLogPanelLayout.createSequentialGroup()
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, eventLogPanelLayout.createSequentialGroup()
+                .addContainerGap()
                 .addComponent(jScrollPane3)
                 .addContainerGap())
         );
@@ -722,13 +703,17 @@ public class Dashboard extends javax.swing.JFrame {
         form.setVisible(true);
     }//GEN-LAST:event_addCourtBtnActionPerformed
 
-    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
+    private void leavePlayerBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_leavePlayerBtnActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_jButton2ActionPerformed
+    }//GEN-LAST:event_leavePlayerBtnActionPerformed
 
     private void tfPlayerNameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tfPlayerNameActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_tfPlayerNameActionPerformed
+
+    private void deleteCourtBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteCourtBtnActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_deleteCourtBtnActionPerformed
 
     public static void main(String args[]) {
         FlatMacLightLaf.setup();
@@ -761,7 +746,6 @@ public class Dashboard extends javax.swing.JFrame {
     private javax.swing.JLabel eligibleCounter;
     private javax.swing.JPanel eventLogPanel;
     private javax.swing.JLabel gamesPlayedCounter;
-    private javax.swing.JButton jButton2;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel11;
@@ -796,6 +780,7 @@ public class Dashboard extends javax.swing.JFrame {
     private javax.swing.JSeparator jSeparator2;
     private javax.swing.JSeparator jSeparator3;
     private javax.swing.JTextArea jTextArea1;
+    private javax.swing.JButton leavePlayerBtn;
     private javax.swing.JLabel playerCounter;
     private javax.swing.JLabel slotsCounter;
     private javax.swing.JButton startMatchBtn;
@@ -804,4 +789,65 @@ public class Dashboard extends javax.swing.JFrame {
     private javax.swing.JLabel totalCourtsCounter;
     private javax.swing.JTable waitingQueueTable;
     // End of variables declaration//GEN-END:variables
+
+    public void addNewCourt(Court court) throws IOException {
+        // 1. Add to ArrayList
+        courtList.add(court);
+
+        // 2. Add directly to productsTable
+        DefaultTableModel model = (DefaultTableModel) courtTable.getModel();
+        model.addRow(new Object[]{
+            court.getCourtNumber(), court.isCourtStatus(),
+            court.getCourtNote()
+        });
+
+        // 3. Write to Products.txt
+        String line = court.getCourtNumber() + "|" + court.isCourtStatus() + "|"
+                + court.getCourtNote();
+
+        FileUtil.appendLine("Courts.txt", line);
+    }
+
+    public void loadCourtsToTable() {
+        
+        courtList.clear(); // Keeps productList synced with the table
+        DefaultTableModel model = (DefaultTableModel) courtTable.getModel();
+        model.setRowCount(0);
+
+        try {
+            List<String> lines = FileUtil.readLines("Courts.txt");
+
+            for (String line : lines) {
+                if (line.isBlank()) {
+                    continue;
+                }
+
+                String[] p = line.split("\\|");
+
+                if (p.length >= 3) {
+                    // 1. Add Product object into productList so Edit/Delete works
+                    // 1. Add Product object into productList so Edit/Delete works
+                    Court court = new Court(
+                            p[0].trim(), p[1].trim(), p[2].trim()
+                    );
+                    courtList.add(court);
+
+// 2. Add row into productsTable
+                    model.addRow(new Object[]{
+                        court.getCourtNumber(), court.isCourtStatus(),
+                        court.getCourtNote()
+                    });
+
+                }
+            }
+        } catch (IOException ex) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Failed to load products: " + ex.getMessage(),
+                    "File Error",
+                    JOptionPane.ERROR_MESSAGE
+            );
+        }
+    }
+
 }

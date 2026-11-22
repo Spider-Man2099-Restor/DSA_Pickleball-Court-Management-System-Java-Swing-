@@ -1,0 +1,2 @@
+Court 1|Available(Ready)|Indoor
+Court 2|Available(Ready)|Outdoor
