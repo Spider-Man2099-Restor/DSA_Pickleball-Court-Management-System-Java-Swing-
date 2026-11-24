@@ -53,6 +53,7 @@ public class Dashboard extends javax.swing.JFrame {
         jTextArea1.setWrapStyleWord(true);
         waitingQueueTable.setDefaultEditor(Object.class, null);   // queue cells are read-only
         jProgressBar1.setMaximum(MAX_PLAYERS);
+
         updateAllStats();
         log("Courtflow started: " + courtList.size() + " court(s), " + playerQueue.size()
                 + " waiting, " + playersInMatch() + " playing.");
@@ -732,28 +733,28 @@ public class Dashboard extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void addCourtBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addCourtBtnActionPerformed
-            addCourtFrame form = new addCourtFrame(this);
+        addCourtFrame form = new addCourtFrame(this);
         form.setVisible(true);
     }//GEN-LAST:event_addCourtBtnActionPerformed
 
     private void leavePlayerBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_leavePlayerBtnActionPerformed
-          int selectedRow = waitingQueueTable.getSelectedRow();
- 
+        int selectedRow = waitingQueueTable.getSelectedRow();
+
         if (selectedRow == -1) {
             JOptionPane.showMessageDialog(this, "Please select a player from the table first.",
                     "No Player Selected", JOptionPane.WARNING_MESSAGE);
             return;
         }
- 
+
         Player selectedPlayer = playerQueue.get(selectedRow);
         int confirm = JOptionPane.showConfirmDialog(this,
                 "Remove '" + selectedPlayer.getPlayerName() + "' from the queue?",
                 "Confirm Leave", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
- 
+
         if (confirm != JOptionPane.YES_OPTION) {
             return;
         }
- 
+
         playerQueue.remove(selectedRow);
         log(selectedPlayer.getPlayerName() + " (" + selectedPlayer.getPlayerID() + ") left the queue.");
         saveAll();
@@ -762,7 +763,7 @@ public class Dashboard extends javax.swing.JFrame {
     }//GEN-LAST:event_leavePlayerBtnActionPerformed
 
     private void tfPlayerNameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tfPlayerNameActionPerformed
-        // TODO add your handling code here:
+        
     }//GEN-LAST:event_tfPlayerNameActionPerformed
 
     private void deleteCourtBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteCourtBtnActionPerformed
@@ -814,7 +815,7 @@ public class Dashboard extends javax.swing.JFrame {
             }
             FileUtil.writeAllLines("Courts.txt", lines);
 
-            // 5. Refresh productsTable on screen
+            // 5. Refresh productsTable 
             loadCourtsToTable();
 
             log("Court deleted: " + selectedCourt.getCourtNumber());
@@ -840,7 +841,7 @@ public class Dashboard extends javax.swing.JFrame {
 
         String id = tfPlayerId.getText().trim();
         String name = tfPlayerName.getText().trim();
- 
+
         if (playerQueue.size() + playersInMatch() >= MAX_PLAYERS) {
             JOptionPane.showMessageDialog(this,
                     "Player limit reached. Maximum of " + MAX_PLAYERS + " players (waiting + playing).",
@@ -848,7 +849,7 @@ public class Dashboard extends javax.swing.JFrame {
             log("Add player blocked: " + MAX_PLAYERS + " player limit reached.");
             return;
         }
- 
+
         try {
             if (id.isBlank() || name.isBlank() || isPlayerIdTaken(id) || duplicate.duplicateId(id)) {
                 JOptionPane.showMessageDialog(this,
@@ -856,19 +857,19 @@ public class Dashboard extends javax.swing.JFrame {
                         "Validation Error", JOptionPane.WARNING_MESSAGE);
                 return;
             }
- 
+
             Player newPlayer = new Player(id, name, 0, "Eligible");
             playerQueue.add(newPlayer);            // always joins at the rear (FIFO)
- 
+
             saveAll();
             refreshAll();
             log("Player joined the rear of the queue: " + name + " (" + id + ") - position " + playerQueue.size() + ".");
- 
+
             tfPlayerId.setText("");
             tfPlayerName.setText("");
             JOptionPane.showMessageDialog(this, "Player added successfully!", "Success",
                     JOptionPane.INFORMATION_MESSAGE);
- 
+
         } catch (IOException ex) {
             JOptionPane.showMessageDialog(this, "File error: " + ex.getMessage(),
                     "File Error", JOptionPane.ERROR_MESSAGE);
@@ -876,6 +877,7 @@ public class Dashboard extends javax.swing.JFrame {
     }//GEN-LAST:event_addPlayerBtnActionPerformed
 
     private void startMatchBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startMatchBtnActionPerformed
+        
         int selectedRow = courtTable.getSelectedRow();
         if (selectedRow == -1) {
             JOptionPane.showMessageDialog(this, "Please select a court from the table first.",
@@ -967,7 +969,7 @@ public class Dashboard extends javax.swing.JFrame {
 
         List<Player> players = activeMatches.get(courtNo);
         if (players == null || players.isEmpty()) {
-            // safety net: court says In Match but we do not know who is playing
+            // safety net: court says In Match
             setCourtStatus(selectedRow, "Ready");
             log("WARNING: no player data for " + courtNo + " - court reset to Ready.");
             saveAll();
@@ -1115,7 +1117,7 @@ public class Dashboard extends javax.swing.JFrame {
         FileUtil.appendLine("Courts.txt", line);
         log("Court added: " + court.getCourtNumber() + " (" + court.getCourtNote() + ")");
         updateAllStats();
-        
+
     }
 
     public void loadCourtsToTable() {
@@ -1135,14 +1137,14 @@ public class Dashboard extends javax.swing.JFrame {
                 String[] p = line.split("\\|");
 
                 if (p.length >= 3) {
-                    // 1. Add Product object into productList so Edit/Delete works
-                    // 1. Add Product object into productList so Edit/Delete works
+                    // 1. Add Court object into courtList so Edit/Delete works
+                    // 1. Add Court object into courtList so Edit/Delete works
                     Court court = new Court(
                             p[0].trim(), p[1].trim(), p[2].trim()
                     );
                     courtList.add(court);
 
-// 2. Add row into productsTable
+// 2. Add row into courtsTable
                     model.addRow(new Object[]{
                         court.getCourtNumber(), court.isCourtStatus(),
                         court.getCourtNote()
@@ -1230,19 +1232,19 @@ public class Dashboard extends javax.swing.JFrame {
 //        eligibleCounter.setText("" + c);
 //        cooldownCounter.setText("" + d);
 //    }
-     public void addTotalCourtCounter() {
+    public void addTotalCourtCounter() {
         updateAllStats();
     }
- 
+
     public void countAvailableCourts() {
         updateAllStats();
     }
- 
+
     public void countEligibleAndCdPlayers() {
         updateAllStats();
     }
-    
-      public void updateAllStats() {
+
+    public void updateAllStats() {
         // Stats1 - courts
         int ready = 0;
         for (Court c : courtList) {
@@ -1252,7 +1254,7 @@ public class Dashboard extends javax.swing.JFrame {
         }
         availableCourtsCounter.setText(String.valueOf(ready));
         totalCourtsCounter.setText(String.valueOf(courtList.size()));
- 
+
         // Stats2 - capacity (waiting + playing)
         int waiting = playerQueue.size();
         int playing = playersInMatch();
@@ -1261,7 +1263,7 @@ public class Dashboard extends javax.swing.JFrame {
         slotsCounter.setText(Math.max(0, MAX_PLAYERS - registered) + " slots open");
         jProgressBar1.setMaximum(MAX_PLAYERS);
         jProgressBar1.setValue(registered);
- 
+
         // Stats3 - player status
         int eligible = 0;
         int cooldown = 0;
@@ -1275,26 +1277,26 @@ public class Dashboard extends javax.swing.JFrame {
         eligibleCounter.setText(String.valueOf(eligible));
         cooldownCounter.setText(String.valueOf(cooldown));
         totalPlayers.setText(waiting + " waiting, " + playing + " playing");
- 
+
         // Stats4 - session
         gamesPlayedCounter.setText(String.valueOf(gamesPlayed));
     }
- 
-    // ===== event log (jTextArea1) =====
+
+    // event log
     private void log(String message) {
         jTextArea1.append("[" + LocalTime.now().format(LOG_TIME) + "] " + message + "\n");
         jTextArea1.setCaretPosition(jTextArea1.getDocument().getLength());
     }
- 
-    // ===== queue / court rules =====
+
+    // queue / court rules
     private boolean isEligible(Player p) {
         return p.isPlayerStatus().equalsIgnoreCase("Eligible");
     }
- 
+
     private boolean isCooldown(Player p) {
         return p.isPlayerStatus().toLowerCase().contains("cooldown");
     }
- 
+
     // next 4 in strict FIFO order; Cooldown players are skipped unless there is no other way to fill the match
     private List<Player> pickNextPlayers() {
         List<Player> picked = new ArrayList<>();
@@ -1310,16 +1312,16 @@ public class Dashboard extends javax.swing.JFrame {
         }
         return picked.size() == MATCH_SIZE ? picked : null;
     }
- 
+
     private Player withGames(Player p, int games, String status) {
         return new Player(p.getPlayerID(), p.getPlayerName(), Math.min(games, MAX_GAMES), status);
     }
- 
+
     private void setCourtStatus(int index, String status) {
         Court c = courtList.get(index);
         courtList.set(index, new Court(c.getCourtNumber(), status, c.getCourtNote()));
     }
- 
+
     private int playersInMatch() {
         int n = 0;
         for (List<Player> list : activeMatches.values()) {
@@ -1327,7 +1329,7 @@ public class Dashboard extends javax.swing.JFrame {
         }
         return n;
     }
- 
+
     private boolean isPlayerIdTaken(String id) {
         for (Player p : playerQueue) {
             if (p.getPlayerID().equalsIgnoreCase(id)) {
@@ -1343,7 +1345,7 @@ public class Dashboard extends javax.swing.JFrame {
         }
         return false;
     }
- 
+
     private String namesOf(List<Player> list) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < list.size(); i++) {
@@ -1354,14 +1356,14 @@ public class Dashboard extends javax.swing.JFrame {
         }
         return sb.toString();
     }
- 
+
     // ===== tables =====
     private void refreshAll() {
         refreshCourtTable();
         refreshQueueTable();
         updateAllStats();
     }
- 
+
     private void refreshCourtTable() {
         int selected = courtTable.getSelectedRow();   // keep the selected court highlighted
         DefaultTableModel model = (DefaultTableModel) courtTable.getModel();
@@ -1373,7 +1375,7 @@ public class Dashboard extends javax.swing.JFrame {
             courtTable.setRowSelectionInterval(selected, selected);
         }
     }
- 
+
     private void refreshQueueTable() {
         DefaultTableModel model = (DefaultTableModel) waitingQueueTable.getModel();
         model.setRowCount(0);
@@ -1382,7 +1384,7 @@ public class Dashboard extends javax.swing.JFrame {
                 p.getPlayerLimit() + "/" + MAX_GAMES, p.isPlayerStatus()});
         }
     }
- 
+
     // ===== files =====
     private void saveAll() {
         try {
@@ -1391,14 +1393,14 @@ public class Dashboard extends javax.swing.JFrame {
                 courts.add(c.getCourtNumber() + "|" + c.isCourtStatus() + "|" + c.getCourtNote());
             }
             FileUtil.writeAllLines("Courts.txt", courts);
- 
+
             List<String> players = new ArrayList<>();
             for (Player p : playerQueue) {
                 players.add(p.getPlayerID() + "|" + p.getPlayerName() + "|"
                         + p.getPlayerLimit() + "|" + p.isPlayerStatus());
             }
             FileUtil.writeAllLines("Players.txt", players);
- 
+
             // who is playing where: courtNumber|id|name|games|status
             List<String> matches = new ArrayList<>();
             for (Map.Entry<String, List<Player>> e : activeMatches.entrySet()) {
@@ -1413,7 +1415,7 @@ public class Dashboard extends javax.swing.JFrame {
                     "File Error", JOptionPane.ERROR_MESSAGE);
         }
     }
- 
+
     // restores running matches after a restart and fixes courts that disagree with Matches.txt
     private void loadMatches() {
         activeMatches.clear();
@@ -1431,7 +1433,7 @@ public class Dashboard extends javax.swing.JFrame {
         } catch (IOException | NumberFormatException ex) {
             log("Could not read Matches.txt: " + ex.getMessage());
         }
- 
+
         boolean changed = false;
         for (int i = 0; i < courtList.size(); i++) {
             Court c = courtList.get(i);
