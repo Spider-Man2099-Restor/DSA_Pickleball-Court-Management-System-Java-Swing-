@@ -44,7 +44,6 @@ public class Dashboard extends javax.swing.JFrame {
         FileUtil.createStartupFile("Courts.txt");
         FileUtil.createStartupFile("Players.txt");
         FileUtil.createStartupFile("Matches.txt");
-
         loadCourtsToTable();
         loadPlayersToTable();
         loadMatches();
@@ -879,6 +878,7 @@ public class Dashboard extends javax.swing.JFrame {
     private void startMatchBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startMatchBtnActionPerformed
         
         int selectedRow = courtTable.getSelectedRow();
+        
         if (selectedRow == -1) {
             JOptionPane.showMessageDialog(this, "Please select a court from the table first.",
                     "No Court Selected", JOptionPane.WARNING_MESSAGE);
@@ -896,6 +896,7 @@ public class Dashboard extends javax.swing.JFrame {
         }
 
         List<Player> picked = pickNextPlayers();
+        
         if (picked == null) {
             String msg = "Need " + MATCH_SIZE + " players to start a match, but only "
                     + playerQueue.size() + " are waiting.";
@@ -905,11 +906,14 @@ public class Dashboard extends javax.swing.JFrame {
         }
 
         StringBuilder who = new StringBuilder();
+        
         for (int i = 0; i < picked.size(); i++) {
+            
             Player p = picked.get(i);
             who.append("  ").append(i + 1).append(". ").append(p.getPlayerName())
                     .append(" (").append(p.getPlayerID()).append(")\n");
         }
+        
         int confirm = JOptionPane.showConfirmDialog(this,
                 "Start a match on '" + courtNo + "' with the next players in the queue?\n\n" + who,
                 "Confirm Start Match", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
@@ -1299,7 +1303,9 @@ public class Dashboard extends javax.swing.JFrame {
 
     // next 4 in strict FIFO order; Cooldown players are skipped unless there is no other way to fill the match
     private List<Player> pickNextPlayers() {
+        
         List<Player> picked = new ArrayList<>();
+        
         for (Player p : playerQueue) {
             if (picked.size() < MATCH_SIZE && isEligible(p)) {
                 picked.add(p);
