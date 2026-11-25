@@ -2,15 +2,18 @@ package com.courflow.main;
 
 import com.courtflow.io.FileUtil;
 import com.courtflow.view.Dashboard;
+import com.courtflow.view.SignInForm;
 import com.formdev.flatlaf.themes.FlatMacLightLaf;
 import java.awt.Color;
 import java.awt.EventQueue;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
 public class Main {
 
     public static void main(String[] args) throws Exception {
         
+        FileUtil.createStartupFile("Users.txt");
         FileUtil.createStartupFile("Courts.txt");
         FileUtil.createStartupFile("Players.txt");
         
@@ -23,8 +26,9 @@ public class Main {
         UIManager.put("TableHeader.foreground", new Color(30, 41, 59));
         UIManager.put("TableHeader.bottomSeparatorColor", new Color(203, 213, 225));
 
-        EventQueue.invokeLater(() -> {
-            new Dashboard().setVisible(true);
+        SwingUtilities.invokeLater(() -> {
+            SignInForm frame = new SignInForm();
+            frame.setVisible(true);
         });
     }
 
