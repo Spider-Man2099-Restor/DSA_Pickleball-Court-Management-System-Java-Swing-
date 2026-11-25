@@ -994,11 +994,11 @@ public class Dashboard extends javax.swing.JFrame {
             log("Finish cancelled on " + courtNo + " - match is still in progress.");
             return;
         }
-
+        log(dialog.getWinnerLog() + "\n");
         gamesPlayed++;
         List<Player> backEligible = new ArrayList<>();
         List<Player> backCooldown = new ArrayList<>();
-
+        
         for (int i = 0; i < players.size(); i++) {
             Player p = players.get(i);
             int games = p.getPlayerLimit() + 1;
@@ -1022,6 +1022,7 @@ public class Dashboard extends javax.swing.JFrame {
         setCourtStatus(selectedRow, "Ready");
 
         log("MATCH FINISHED on " + courtNo + ". Court is Ready. Games played this session: " + gamesPlayed);
+        
         saveAll();
         refreshAll();
     }//GEN-LAST:event_finishGameBtnActionPerformed
